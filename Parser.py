@@ -5,13 +5,12 @@ from os import remove, getenv
 
 class Parser:
     def get_screenshot(self, url: str, use_default_profile: bool = False):
+        options = webdriver.ChromeOptions()
+
         if use_default_profile:
-            options = webdriver.ChromeOptions()
             options.add_argument(rf"user-data-dir=C:\Users\{getenv('username')}\AppData\Local\Google\Chrome\User Data\Default")
-            options.add_argument('--profile-directory=Profile 1')
-            driver = webdriver.Chrome(chrome_options=options)
-        else:
-            driver = webdriver.Chrome()
+            
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
         driver.maximize_window()
         current = 0
