@@ -7,7 +7,8 @@
 1) Python 3.10+
 
 ## Build
-__pip install -r requirements.txt__
+1) __pip install -r requirements.txt__
+2) python main.py
 
 ## Note
 1) By default you should pass pop-ups locations by XPATH or you can specify their locations by passing `by` parameter (see [selenium-docs][1]) 
