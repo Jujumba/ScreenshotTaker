@@ -1,7 +1,7 @@
 # Web-site full-scale screenshot taker
 
 ## An example from Python official web-site
-![alt text](https://github.com/Jujumba/ScreenshotTaker/blob/master/examples/python.org.png)
+![img](https://github.com/Jujumba/ScreenshotTaker/blob/master/examples/python.org.png)
 
 ## Prerequisites
 1) Python 3.10+
@@ -11,7 +11,7 @@
 2) python main.py
 
 ## Note
-1) By default you should pass pop-ups locations by XPATH or you can specify their locations by passing `by` parameter (see [selenium-docs][1]) 
-
-
-[1]: https://selenium-python.readthedocs.io/locating-elements.html
+1) You __must__ pass location of elements for removal only by XPATH
+2) You can specify which element should be deleted after certain iteration. For example `Parser().get_screenshot("https://github.com/Jujumba/ScreenshotTaker/tree/master/", elements_to_remove={
+        '//*[@id="readme"]/div[1]': 1
+    })` will remove "readme header" after first iteration. 
