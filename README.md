@@ -1,7 +1,7 @@
 # Web-site full-scale screenshot taker
 
 ## An example from Python official web-site
-![alt text](https://github.com/Jujumba/ScreenshotTaker/examples/python.org.png)
+![alt text](https://github.com/Jujumba/ScreenshotTaker/blob/master/examples/python.org.png)
 
 ## Prerequisites
 1) Python 3.10+
