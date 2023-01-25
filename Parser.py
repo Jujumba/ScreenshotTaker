@@ -5,64 +5,70 @@ from os import remove, getenv
 
 class Parser:
     def __init__(self):
-        self.__driver__ = None
-        self.__options__ = None
-        self.__deleted_header__ = False
-        self.__images__ = []
-        self.__banned_chars__ = ['/','\\',':','*','?','"','<','>','|']
-
-    def get_screenshot(self, url: str, use_default_profile: bool = False, pop_ups: list[str] = None, by: By = By.XPATH, delete_header: bool = False):
-        self.__options__ = webdriver.ChromeOptions()
+        self.__driver = None
+        self.__options = None
+        self.__deleted_header = False
+        self.__images = []
+        self.__banned_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+    def get_screenshot(self, url: str, use_default_profile: bool = False, pop_ups: list[str] = None, elements_to_remove: dict[str, int] = None):
+        self.__options = webdriver.ChromeOptions()
 
         if use_default_profile:
-            self.__options__.add_argument(rf"user-data-dir=C:\Users\{getenv('username')}\AppData\Local\Google\Chrome\User Data\Default")
+            self.__options.add_argument(rf"user-data-dir=C:\Users\{getenv('username')}\AppData\Local\Google\Chrome\User Data\Default")
 
-        self.__driver__ = webdriver.Chrome(chrome_options=self.__options__)
-        self.__driver__.get(url)
-        self.__driver__.maximize_window()
+        self.__driver = webdriver.Chrome(chrome_options=self.__options)
+        self.__driver.get(url)
+        self.__driver.maximize_window()
 
-        self.accept_pop_ups(pop_ups, by)
+        self.__accept_pop_ups(pop_ups)
 
-        self.scroll(delete_header)
-        self.__driver__.quit()
+        self.__scroll(elements_to_remove)
+        self.__driver.quit()
 
         img_name = url
-        for banned_char in self.__banned_chars__:
-            img_name = img_name.replace(banned_char, " ")
+        for banned_char in self.__banned_chars:
+            img_name = img_name.replace(banned_char, "-")
 
-        self.save(img_name)
+        self.__save(img_name)
 
-    def accept_pop_ups(self, pop_ups, by):
+    def __accept_pop_ups(self, pop_ups):
         if pop_ups is None:
             return
         for pop_up in pop_ups:
-            self.__driver__.find_element(by, pop_up).click()
+            self.__driver.find_element(By.XPATH, pop_up).click()
 
-    def scroll(self, delete_header):
+    def __scroll(self, elements_to_remove: dict[str, int] = None):
         current = 0
-        height = self.__driver__.execute_script('return document.body.clientHeight')
-        step = self.__driver__.execute_script("return screen.height") - 160  # Magic number
+        iteration = 0
+        if elements_to_remove is not None:
+            keys = list(elements_to_remove)
+        else:
+            keys = list()
+        height = self.__driver.execute_script('return document.body.clientHeight')
+        step = self.__driver.execute_script("return screen.height") - 160  # Magic number
         while current <= height:
             img_name = f"{str(current)}.png"
-            self.__driver__.save_screenshot(img_name)
-            self.__images__.append(cv2.imread(img_name))
+            for key in keys:
+                if elements_to_remove[key] == iteration:
+                    self.__remove_element(key)
+                    pass
+            self.__driver.save_screenshot(img_name)
+            self.__images.append(cv2.imread(img_name))
 
             remove(img_name)
-            self.__driver__.execute_script(f"window.scrollBy(0, {step})")
+            self.__driver.execute_script(f"window.scrollBy(0, {step})")
 
-            if not self.__deleted_header__ and delete_header:  # Removing header
-                self.__delete_header__()
-
+            iteration += 1
             current += step
 
-
-    def save(self, output_name: str):
+    def __save(self, output_name: str):
         if not output_name.endswith(".png"):
             output_name += ".png"
-        im_v = cv2.vconcat(self.__images__)
+        im_v = cv2.vconcat(self.__images)
         cv2.imwrite(output_name, im_v)
-        self.__images__.clear()
+        self.__images.clear()
 
-    def __delete_header__(self):
-        self.__driver__.execute_script("const header = document.getElementsByTagName(\"header\")[0]; header.remove()")
-        self.__deleted_header__ = True
+    def __remove_element(self, elem: str):
+        elem = elem.replace('"', '\'')
+        script = f'let e = document.evaluate(\"{elem}\", document,null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; if (e != null)e.remove()'
+        self.__driver.execute_script(script)
