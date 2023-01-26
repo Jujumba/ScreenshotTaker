@@ -4,19 +4,18 @@ import cv2
 from os import remove, getenv
 
 class Parser:
-    def __init__(self):
-        self.__driver = None
-        self.__options = None
-        self.__deleted_header = False
+    def __init__(self, use_default_profile: bool = False):
         self.__images = []
         self.__banned_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
-    def get_screenshot(self, url: str, use_default_profile: bool = False, pop_ups: list[str] = None, elements_to_remove: dict[str, int] = None):
+
         self.__options = webdriver.ChromeOptions()
 
         if use_default_profile:
             self.__options.add_argument(rf"user-data-dir=C:\Users\{getenv('username')}\AppData\Local\Google\Chrome\User Data\Default")
 
         self.__driver = webdriver.Chrome(chrome_options=self.__options)
+    def get_screenshot(self, url: str, pop_ups: list[str] = None, elements_to_remove: dict[str, int] = None):
+
         self.__driver.get(url)
         self.__driver.maximize_window()
 
@@ -30,6 +29,7 @@ class Parser:
             img_name = img_name.replace(banned_char, "-")
 
         self.__save(img_name)
+        self.__release()
 
     def __accept_pop_ups(self, pop_ups):
         if pop_ups is None:
@@ -43,7 +43,7 @@ class Parser:
         if elements_to_remove is not None:
             keys = list(elements_to_remove)
         else:
-            keys = list()
+            keys = []
         height = self.__driver.execute_script('return document.body.clientHeight')
         step = self.__driver.execute_script("return screen.height") - 160  # Magic number
         while current <= height:
@@ -51,7 +51,7 @@ class Parser:
             for key in keys:
                 if elements_to_remove[key] == iteration:
                     self.__remove_element(key)
-                    pass
+
             self.__driver.save_screenshot(img_name)
             self.__images.append(cv2.imread(img_name))
 
@@ -70,5 +70,7 @@ class Parser:
 
     def __remove_element(self, elem: str):
         elem = elem.replace('"', '\'')
-        script = f'let e = document.evaluate(\"{elem}\", document,null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; if (e != null)e.remove()'
-        self.__driver.execute_script(script)
+        self.__driver.execute_script(f'let e = document.evaluate(\"{elem}\", document,null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; if (e != null)e.remove()')
+
+    def __release(self):
+        self.__images = []
